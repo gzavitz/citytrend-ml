@@ -6,22 +6,10 @@ import dtos.VenueDto;
 
 public abstract class Probability {
 	
-	private VenueDto mVenue;
-	private String mVenueId;
-	
-	public Probability(VenueDto venue) {
-		mVenue = venue;
-		mVenueId = venue.getVenueId();
-	}
-	
-	public final boolean matchesId(HitDto hit) {
-		return hit.venueId.equals(mVenueId);
-	}
-	
-	public float getProbability(Hits hits) {
+	public static float getProbability(Hits matchSubset, VenueDto search) {
 		int overallCount = 0, venueCount = 0;
-		for(HitDto hit : hits.asList()) {
-			if(matchesId(hit))
+		for(HitDto hit : matchSubset.asList()) {
+			if(hit.venueId.equals(search.getVenueId()))
 				venueCount++;
 			else
 				overallCount++;

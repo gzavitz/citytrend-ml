@@ -2,16 +2,13 @@ package probability;
 
 import java.util.Calendar;
 
-import collections.Hits;
 import dtos.HitDto;
-import dtos.VenueDto;
 
 public class TimeOfDayDayOfWeekProbability extends Probability {
 
 	private int mDayOfWeek, mStartHour, mStopHour;
 	
-	public TimeOfDayDayOfWeekProbability(VenueDto venue, int dayOfWeek, int startHour, int stopHour) {
-		super(venue);
+	public TimeOfDayDayOfWeekProbability(int dayOfWeek, int startHour, int stopHour) {
 		mDayOfWeek = dayOfWeek;
 		mStartHour = startHour;
 		mStopHour = stopHour;
