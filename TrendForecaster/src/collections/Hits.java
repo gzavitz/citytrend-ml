@@ -3,6 +3,8 @@ package collections;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import probability.Probability;
+
 import dtos.HitDto;
 
 public class Hits extends ArrayList<Object>{
@@ -16,6 +18,15 @@ public class Hits extends ArrayList<Object>{
 	
 	public Hits(Collection<HitDto> dtos) {
 		super(dtos);
+	}
+	
+	public Hits findVenueHits(Probability probability) {
+		Hits venueHits = new Hits();
+		for(HitDto hitDto: hits) {
+			if(probability.matches(hitDto))
+				venueHits.add(hitDto);
+		}
+		return venueHits;
 	}
 	
 	public Hits findVenueHits(String venueId){
