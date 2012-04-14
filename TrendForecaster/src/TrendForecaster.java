@@ -1,7 +1,11 @@
 import java.net.UnknownHostException;
 
+import collections.Hits;
+import collections.Venues;
+
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
+import com.google.code.morphia.query.Query;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
@@ -48,6 +52,32 @@ public class TrendForecaster {
 		}
 	}
 	
+	public Hits getHitCollection(){
+		Query<HitDto> hitQuery = datastore.find(HitDto.class, "expired", true);
+		Hits allHits = new Hits();
+		for(HitDto hitDto: hitQuery){
+			allHits.add(hitDto);
+		}
+		
+		return allHits;
+	}
+	
+	public Venues getVenueCollection(){
+		Query<VenueDto> venueQuery = datastore.find(VenueDto.class);
+		Venues venues = new Venues();
+		for(VenueDto venueDto: venueQuery){
+			venues.add(venueDto);
+		}
+		
+		return venues;
+	}
+	
 	public static void main(String[] args){
+		TrendForecaster forecast = new TrendForecaster();
+		Hits hits = forecast.getHitCollection();
+		Venues venues = forecast.getVenueCollection();
+		
+		System.out.println("Total Hits: " + hits.asList().size());
+		System.out.println("Total Venues: " + venues.asList().size());
 	}
 }
