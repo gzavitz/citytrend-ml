@@ -18,7 +18,7 @@ public abstract class Probability {
 		return hit.venueId.equals(mVenueId);
 	}
 	
-	public final float getStandardRatio(Hits hits) {
+	public float getProbability(Hits hits) {
 		int overallCount = 0, venueCount = 0;
 		for(HitDto hit : hits.asList()) {
 			if(matchesId(hit))
@@ -28,8 +28,7 @@ public abstract class Probability {
 		}
 		return (float) venueCount / (float) overallCount;
 	}
-
-	public abstract float getProbability(Hits hits);
+	
 	public abstract boolean matches(HitDto hit);
 	
 }
