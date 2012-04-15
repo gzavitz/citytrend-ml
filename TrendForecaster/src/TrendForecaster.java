@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -5,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import probability.DayOfWeekProbability;
+import probability.Posterior;
 import probability.Probability;
 import probability.TimeOfDayDayOfWeekProbability;
 import probability.TimeOfDayProbability;
@@ -32,6 +34,9 @@ public class TrendForecaster {
 
 
 	public TrendForecaster(){
+		System.out.println("Establishing Database connection...");
+		
+		
 		// use the MongoURI to access MongoDB connection methods.
     	MongoURI uri = new MongoURI(uriString);
     	DB database = null;
@@ -58,6 +63,8 @@ public class TrendForecaster {
 
 
 		}
+		
+		System.out.println("Datastore obtained");
 	}
 	
 	public Hits getHitCollection(){
@@ -80,47 +87,55 @@ public class TrendForecaster {
 		return venues;
 	}
 	
-	public static class Posterior {
-		
-		public VenueDto venue;
-		public double posterior = 1f;
-		
-		public String toString() {
-			return String.format("%s " + posterior, venue.getVenueName());
-		}
-		
-	}
 	
 	public static void main(String[] args){
+		BigDecimal dayWeight = new BigDecimal("0.7");
 		TrendForecaster forecast = new TrendForecaster();
+		
+		Long beginTime = System.currentTimeMillis();
 		Hits hits = forecast.getHitCollection();
 		Venues venues = forecast.getVenueCollection();
+		Long endTime = System.currentTimeMillis();
+		System.out.println("Pulled " + hits.size() + " hits and " + venues.size() + " venues in " + (endTime - beginTime) + " ms");
 		
 		ArrayList<Posterior> posteriors = new ArrayList<Posterior>();
 		Hits dayOfWeekSubset = hits.findVenueHits(new DayOfWeekProbability(Calendar.MONDAY));
-		Hits timeOfDaySubset = hits.findVenueHits(new TimeOfDayProbability(12, 15));
-		Hits timeOfDayDayOfWeekSubset = hits.findVenueHits(new TimeOfDayDayOfWeekProbability(Calendar.MONDAY, 12, 15));
+		Hits timeOfDaySubset = hits.findVenueHits(new TimeOfDayProbability(9, 10));
+		Hits timeOfDayDayOfWeekSubset = hits.findVenueHits(new TimeOfDayDayOfWeekProbability(Calendar.TUESDAY, 9, 10));
+		
+		Long beginCalcTime = System.currentTimeMillis();
 		for(VenueDto venue : venues.asList()) {
 			Posterior posterior = new Posterior();
 			posterior.venue = venue;
 			
 			//prior which is overall probability of a venue checkin being of this venue
-			posterior.posterior *= 0.7f * Probability.getProbability(hits, venue);
+//			posterior.posterior *= 0.7f * Probability.getProbability(hits, venue);
+			posterior.posterior = posterior.posterior.multiply(dayWeight.multiply(Probability.getProbability(hits, venue)));
 			
-			posterior.posterior *= 0.7f * Probability.getProbability(dayOfWeekSubset, venue);
-			posterior.posterior *= Probability.getProbability(timeOfDaySubset, venue);
-			posterior.posterior *= Probability.getProbability(timeOfDayDayOfWeekSubset, venue);
+			posterior.posterior = posterior.posterior.multiply(dayWeight.multiply(Probability.getProbability(dayOfWeekSubset, venue)));
+			posterior.posterior = posterior.posterior.multiply(Probability.getProbability(timeOfDaySubset, venue));
+			posterior.posterior = posterior.posterior.multiply(Probability.getProbability(timeOfDayDayOfWeekSubset, venue));
+			
+//			posterior.posterior *= 0.7f * Probability.getProbability(dayOfWeekSubset, venue);
+//			posterior.posterior *= Probability.getProbability(timeOfDaySubset, venue);
+//			posterior.posterior *= Probability.getProbability(timeOfDayDayOfWeekSubset, venue);
 			
 			posteriors.add(posterior);
 		}
+		Long endCalcTime = System.currentTimeMillis();
+		System.out.println("Calculated Posteriors in " + (endCalcTime - beginCalcTime) + " ms");
+
+		beginCalcTime = System.currentTimeMillis();
 		Collections.sort(posteriors, new Comparator<Posterior>() {
 			@Override
 			public int compare(Posterior o1, Posterior o2) {
-				if(o1.posterior < o2.posterior) return -1;
-				else if(o1.posterior > o2.posterior) return 1;
-				return 0;
+				return o1.posterior.compareTo(o2.posterior);
 			}
 		});
+		
+		
+		endCalcTime = System.currentTimeMillis();
+		System.out.println("Sorted Venues in " + (endCalcTime - beginCalcTime));
 		
 		System.out.println("Total Hits: " + hits.asList().size());
 		System.out.println("Total Venues: " + venues.asList().size());
