@@ -3,6 +3,7 @@ package collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import dtos.VenueDto;
 
@@ -29,6 +30,23 @@ public class Venues extends ArrayList<Object>{
 			}
 		}
 		return foundVenue;
+	}
+	
+	public Venues getSubset(List<String> venueIds) {
+		Venues subset = new Venues();
+		for(VenueDto venue : venues) {
+			if(venueIds.contains(venue.getVenueId()))
+				subset.add(venue);
+		}
+		return subset;
+	}
+	
+	public boolean containsVenue(String venueId) {
+		for(VenueDto venueDto : venues) {
+			if(venueId.equals(venueDto.getVenueId()))
+				return true;
+		}
+		return false;
 	}
 	
 	public void set(int index, VenueDto venueDto){
